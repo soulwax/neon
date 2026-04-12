@@ -304,8 +304,17 @@ DB_ARRAY=($DB_INPUT)
 
 echo
 SSL_SETUP="n"
+CF_TUNNEL="n"
 if [[ "$HOST" != "localhost" && "$HOST" != "127.0.0.1" ]]; then
     read -rp "$(echo -e "${BOLD}Set up nginx + Let's Encrypt SSL for ${HOST}?${NC} [y/N]: ")" SSL_SETUP
+    if [[ "${SSL_SETUP,,}" == "y" ]]; then
+        echo
+        warn "HTTP-01 challenge requires port 80 to be reachable from the internet."
+        warn "If you use a Cloudflare Zero Trust TCP tunnel (tcp://host:port), port 80"
+        warn "is not exposed and HTTP-01 will fail. Use DNS-01 instead."
+        echo
+        read -rp "$(echo -e "${BOLD}Are you behind a Cloudflare tunnel (use DNS-01 challenge)?${NC} [y/N]: ")" CF_TUNNEL
+    fi
 fi
 
 prompt PG_VERSION "Postgres version (14 15 16 17)" "16"
@@ -404,8 +413,36 @@ STREAM
 
     if need_sudo certbot certificates 2>/dev/null | grep -q "Domains:.*${HOST}"; then
         warn "Certificate for ${HOST} already exists, skipping issuance."
+    elif [[ "${CF_TUNNEL,,}" == "y" ]]; then
+        # DNS-01 challenge via Cloudflare API — no port 80 needed
+        info "Installing certbot-dns-cloudflare…"
+        need_sudo apt-get install -y python3-certbot-dns-cloudflare
+
+        echo
+        info "You need a Cloudflare API token with 'DNS:Edit' permission for ${HOST}."
+        info "Create one at: https://dash.cloudflare.com/profile/api-tokens"
+        info "Use the 'Edit zone DNS' template and scope it to your zone."
+        echo
+        prompt CF_API_TOKEN "Cloudflare API token"
+
+        CF_CREDS_FILE="$HOME/.cloudflare/cloudflare.ini"
+        mkdir -p "$HOME/.cloudflare"
+        cat > "$CF_CREDS_FILE" <<CF_INI
+# Cloudflare API token for certbot DNS-01 challenge
+dns_cloudflare_api_token = ${CF_API_TOKEN}
+CF_INI
+        chmod 600 "$CF_CREDS_FILE"
+        success "Credentials saved to ${CF_CREDS_FILE}."
+
+        info "Obtaining Let's Encrypt certificate via DNS-01 for ${HOST}…"
+        need_sudo certbot certonly \
+            --dns-cloudflare \
+            --dns-cloudflare-credentials "$CF_CREDS_FILE" \
+            --dns-cloudflare-propagation-seconds 30 \
+            -d "$HOST" \
+            --non-interactive --agree-tos --register-unsafely-without-email
     else
-        info "Obtaining Let's Encrypt certificate for ${HOST}…"
+        info "Obtaining Let's Encrypt certificate via HTTP-01 for ${HOST}…"
         need_sudo certbot certonly --webroot -w /var/www/html -d "$HOST" \
             --non-interactive --agree-tos --register-unsafely-without-email
     fi
@@ -426,6 +463,20 @@ STREAM
     need_sudo cp /tmp/neon-postgres-hook.sh "$HOOK_DST"
     need_sudo chmod +x "$HOOK_DST"
     success "Renewal hook installed at ${HOOK_DST}."
+
+    # For DNS-01 renewals the Cloudflare credentials file must be readable by
+    # root (certbot runs as root during renewal). Copy it to /etc/letsencrypt/
+    # so it persists system-wide regardless of which user originally ran setup.
+    if [[ "${CF_TUNNEL,,}" == "y" ]]; then
+        need_sudo cp "$HOME/.cloudflare/cloudflare.ini" /etc/letsencrypt/cloudflare.ini
+        need_sudo chmod 600 /etc/letsencrypt/cloudflare.ini
+        # Ensure the renewal config points at the system-wide credentials file
+        RENEWAL_CONF="/etc/letsencrypt/renewal/${HOST}.conf"
+        if [[ -f "$RENEWAL_CONF" ]]; then
+            need_sudo sed -i "s|dns_cloudflare_credentials.*|dns_cloudflare_credentials = /etc/letsencrypt/cloudflare.ini|" "$RENEWAL_CONF"
+        fi
+        success "Cloudflare credentials installed at /etc/letsencrypt/cloudflare.ini."
+    fi
 
     info "Testing renewal (dry run)…"
     need_sudo certbot renew --dry-run --quiet && success "Auto-renewal OK."
@@ -480,7 +531,12 @@ print_summary "$HOST" "$PG_PW" "$SSL_MODE"
 
 if [[ "${SSL_SETUP,,}" == "y" ]]; then
     echo -e "  ${YELLOW}Port 5432${NC} → nginx stream → 55433 (standard Postgres port active)"
-    echo -e "  ${YELLOW}Port 80${NC}   → nginx (certbot renewals)"
+    if [[ "${CF_TUNNEL,,}" == "y" ]]; then
+        echo -e "  ${YELLOW}SSL cert${NC}  — DNS-01 via Cloudflare (no port 80 required)"
+        echo -e "  ${YELLOW}Renewal${NC}   — certbot will use Cloudflare API token automatically"
+    else
+        echo -e "  ${YELLOW}Port 80${NC}   → nginx (certbot webroot renewals)"
+    fi
     echo
 fi
 
