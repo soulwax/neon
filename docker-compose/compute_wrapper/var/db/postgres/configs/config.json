@@ -13,11 +13,16 @@
             "roles": [
                 {
                     "name": "cloud_admin",
-                    "encrypted_password": "b093c0d3b281ba6da1eacc608620abd8",
+                    "encrypted_password": "e62f8690f27aede8830ad99e7d311445",
                     "options": null
                 }
             ],
             "databases": [
+                {
+                    "name": "coindguild",
+                    "owner": "cloud_admin",
+                    "options": null
+                }
             ],
             "settings": [
                 {
@@ -133,6 +138,21 @@
                 {
                     "name": "cron.database",
                     "value": "postgres",
+                    "vartype": "string"
+                },
+                {
+                    "name": "ssl",
+                    "value": "on",
+                    "vartype": "bool"
+                },
+                {
+                    "name": "ssl_cert_file",
+                    "value": "/var/db/postgres/certs/server.crt",
+                    "vartype": "string"
+                },
+                {
+                    "name": "ssl_key_file",
+                    "value": "/var/db/postgres/certs/server.key",
                     "vartype": "string"
                 }
             ]
