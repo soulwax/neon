@@ -40,6 +40,21 @@
                     "name": "coinguild",
                     "owner": "cloud_admin",
                     "options": null
+                },
+                {
+                    "name": "starchild_frontend,",
+                    "owner": "cloud_admin",
+                    "options": null
+                },
+                {
+                    "name": "coindguild,",
+                    "owner": "cloud_admin",
+                    "options": null
+                },
+                {
+                    "name": "starchild_backend,",
+                    "owner": "cloud_admin",
+                    "options": null
                 }
             ],
             "settings": [
