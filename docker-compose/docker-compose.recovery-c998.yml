@@ -1,14 +1,12 @@
 services:
   minio:
-    restart: always
     image: quay.io/minio/minio:RELEASE.2022-10-20T00-55-09Z
-    ports:
-      - 9000:9000
-      - 9001:9001
     environment:
       - MINIO_ROOT_USER=minio
       - MINIO_ROOT_PASSWORD=password
     command: server /data --address :9000 --console-address ":9001"
+    volumes:
+      - recovery_c998_minio:/data
 
   minio_create_buckets:
     image: minio/mc
@@ -22,33 +20,31 @@ services:
       - "until (/usr/bin/mc alias set minio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD) do
              echo 'Waiting to start minio...' && sleep 1;
          done;
-         /usr/bin/mc mb minio/neon --region=eu-north-1;
+         /usr/bin/mc mb minio/neon --region=eu-north-1 || true;
          exit 0;"
     depends_on:
       - minio
 
+  storage_broker:
+    image: ${REPOSITORY:-ghcr.io/neondatabase}/neon:${TAG:-latest}
+    command:
+      - "storage_broker"
+      - "--listen-addr=0.0.0.0:50051"
+
   pageserver:
-    restart: always
     image: ${REPOSITORY:-ghcr.io/neondatabase}/neon:${TAG:-latest}
     environment:
       - AWS_ACCESS_KEY_ID=minio
       - AWS_SECRET_ACCESS_KEY=password
-      #- RUST_BACKTRACE=1
     ports:
-       #- 6400:6400  # pg protocol handler
-       - 9898:9898 # http endpoints
+      - 19898:9898
     volumes:
-      - ./pageserver_config:/data/.neon/
-    ulimits:
-      nofile:
-        soft: 65536
-        hard: 65536
+      - ./recovery_pageserver_config:/data/.neon/
     depends_on:
       - storage_broker
       - minio_create_buckets
 
   safekeeper1:
-    restart: always
     image: ${REPOSITORY:-ghcr.io/neondatabase}/neon:${TAG:-latest}
     environment:
       - SAFEKEEPER_ADVERTISE_URL=safekeeper1:5454
@@ -56,14 +52,6 @@ services:
       - BROKER_ENDPOINT=http://storage_broker:50051
       - AWS_ACCESS_KEY_ID=minio
       - AWS_SECRET_ACCESS_KEY=password
-      #- RUST_BACKTRACE=1
-    ports:
-      #- 5454:5454 # pg protocol handler
-      - 7676:7676 # http endpoints
-    ulimits:
-      nofile:
-        soft: 65536
-        hard: 65536
     entrypoint:
       - "/bin/sh"
       - "-c"
@@ -77,12 +65,13 @@ services:
                                         bucket_name='neon',
                                         bucket_region='eu-north-1',
                                         prefix_in_bucket='/safekeeper/'}\""
+    volumes:
+      - recovery_c998_sk1:/data
     depends_on:
       - storage_broker
       - minio_create_buckets
 
   safekeeper2:
-    restart: always
     image: ${REPOSITORY:-ghcr.io/neondatabase}/neon:${TAG:-latest}
     environment:
       - SAFEKEEPER_ADVERTISE_URL=safekeeper2:5454
@@ -90,14 +79,6 @@ services:
       - BROKER_ENDPOINT=http://storage_broker:50051
       - AWS_ACCESS_KEY_ID=minio
       - AWS_SECRET_ACCESS_KEY=password
-      #- RUST_BACKTRACE=1
-    ports:
-      #- 5454:5454 # pg protocol handler
-      - 7677:7676 # http endpoints
-    ulimits:
-      nofile:
-        soft: 65536
-        hard: 65536
     entrypoint:
       - "/bin/sh"
       - "-c"
@@ -111,12 +92,13 @@ services:
                                         bucket_name='neon',
                                         bucket_region='eu-north-1',
                                         prefix_in_bucket='/safekeeper/'}\""
+    volumes:
+      - recovery_c998_sk2:/data
     depends_on:
       - storage_broker
       - minio_create_buckets
 
   safekeeper3:
-    restart: always
     image: ${REPOSITORY:-ghcr.io/neondatabase}/neon:${TAG:-latest}
     environment:
       - SAFEKEEPER_ADVERTISE_URL=safekeeper3:5454
@@ -124,14 +106,6 @@ services:
       - BROKER_ENDPOINT=http://storage_broker:50051
       - AWS_ACCESS_KEY_ID=minio
       - AWS_SECRET_ACCESS_KEY=password
-      #- RUST_BACKTRACE=1
-    ports:
-      #- 5454:5454 # pg protocol handler
-      - 7678:7676 # http endpoints
-    ulimits:
-      nofile:
-        soft: 65536
-        hard: 65536
     entrypoint:
       - "/bin/sh"
       - "-c"
@@ -145,109 +119,48 @@ services:
                                         bucket_name='neon',
                                         bucket_region='eu-north-1',
                                         prefix_in_bucket='/safekeeper/'}\""
+    volumes:
+      - recovery_c998_sk3:/data
     depends_on:
       - storage_broker
       - minio_create_buckets
 
-  storage_broker:
-    restart: always
-    image: ${REPOSITORY:-ghcr.io/neondatabase}/neon:${TAG:-latest}
-    ports:
-      - 50051:50051
-    command:
-      - "storage_broker"
-      - "--listen-addr=0.0.0.0:50051"
-
-  pgbouncer:
-    restart: always
-    image: pgbouncer/pgbouncer:latest
-    user: "${PGBOUNCER_UID:-1000}:${PGBOUNCER_GID:-1000}"
-    entrypoint: ["/opt/pgbouncer/pgbouncer", "/etc/pgbouncer/pgbouncer.ini"]
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    ports:
-      - 55432:5432   # pooled — use this for DATABASE_URL / app runtime via neon.ixa.ink
-    volumes:
-      - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
-      - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
-      - ./certs/server.crt:/etc/pgbouncer/server.crt:ro
-      - ./certs/server.key:/etc/pgbouncer/server.key:ro
-    ulimits:
-      nofile:
-        soft: 65536
-        hard: 65536
-    depends_on:
-      - compute1
-
   compute1:
-    restart: always
-    build:
-      context: ./compute_wrapper/
-      args:
-        - REPOSITORY=${REPOSITORY:-ghcr.io/neondatabase}
-        - COMPUTE_IMAGE=compute-node-v${PG_VERSION:-16}
-        - TAG=${COMPUTE_TAG:-${TAG:-latest}}
-        - http_proxy=${http_proxy:-}
-        - https_proxy=${https_proxy:-}
     image: built-compute
     environment:
-      - PG_VERSION=${PG_VERSION:-16}
-      - TENANT_ID=${TENANT_ID:-}
-      - TIMELINE_ID=${TIMELINE_ID:-}
-      #- RUST_BACKTRACE=1
-    # Mount the test files directly, for faster editing cycle.
+      - PG_VERSION=${PG_VERSION:-17}
+      - TENANT_ID=c38f0627b14702730471f03eda50502e
+      - TIMELINE_ID=c998f99004445dbdb5a5e5b738c33e53
     volumes:
       - ./compute_wrapper/var/db/postgres/configs/:/var/db/postgres/configs/
       - ./compute_wrapper/shell/:/shell/
       - ./certs:/var/db/postgres/certs:ro
     shm_size: 512m
-    ulimits:
-      nofile:
-        soft: 65536
-        hard: 65536
     ports:
-      - 55433:55433 # pg protocol handler
-      - 3080:3080 # http endpoints
+      - 15533:55433
+      - 13080:3080
     entrypoint:
       - "/shell/compute.sh"
-    # Ad an alias for compute1 for compatibility
     networks:
       default:
         aliases:
-            - compute
+          - compute
     depends_on:
       - safekeeper1
       - safekeeper2
       - safekeeper3
       - pageserver
 
-  compute_is_ready:
-    image: postgres:latest
-    environment:
-      - PARALLEL_COMPUTES=1
-    entrypoint:
-      - "/bin/sh"
-      - "-c"
-    command:
-      - "for i in $(seq 1 $${PARALLEL_COMPUTES}); do
-           until pg_isready -h compute$$i -p 55433 -U cloud_admin ; do
-             sleep 1;
-           done;
-         done;
-         echo All computes are started"
-    depends_on:
-      - compute1
-
-  neon-test-extensions:
-    profiles: ["test-extensions"]
-    image: ${REPOSITORY:-ghcr.io/neondatabase}/neon-test-extensions-v${PG_TEST_VERSION:-${PG_VERSION:-16}}:${TEST_EXTENSIONS_TAG:-${TAG:-latest}}
-    environment:
-      - PGUSER=${PGUSER:-cloud_admin}
-      - PGPASSWORD=${PGPASSWORD:-cloud_admin}
-    entrypoint:
-      - "/bin/bash"
-      - "-c"
-    command:
-      - sleep 3600
-    depends_on:
-      - compute1
+volumes:
+  recovery_c998_minio:
+    external: true
+    name: c335b1a99bb0014683307fccb9ffb15b482bb082d251c1dbee1ab4e1763bcc08
+  recovery_c998_sk1:
+    external: true
+    name: e4f446844137c7fab29b93053c6cab61d188c68b95008c5d553613f95b27dc33
+  recovery_c998_sk2:
+    external: true
+    name: a6904f8694893a92e6d55151c5a16299233e63570f7e58838fc8d39bcc46bc0c
+  recovery_c998_sk3:
+    external: true
+    name: 460205d71192f572fe998febbc68817807c06803b063c0572a23446a9475f00a

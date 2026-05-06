@@ -1,0 +1,132 @@
+services:
+  minio:
+    image: quay.io/minio/minio:RELEASE.2022-10-20T00-55-09Z
+    environment:
+      - MINIO_ROOT_USER=minio
+      - MINIO_ROOT_PASSWORD=password
+    command: server /data --address :9000 --console-address ":9001"
+    volumes:
+      - recovery_1c067_minio:/data
+
+  minio_create_buckets:
+    image: minio/mc
+    environment:
+      - MINIO_ROOT_USER=minio
+      - MINIO_ROOT_PASSWORD=password
+    entrypoint:
+      - "/bin/sh"
+      - "-c"
+    command:
+      - "until (/usr/bin/mc alias set minio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD) do
+             echo 'Waiting to start minio...' && sleep 1;
+         done;
+         /usr/bin/mc mb minio/neon --region=eu-north-1 || true;
+         exit 0;"
+    depends_on:
+      - minio
+
+  storage_broker:
+    image: ${REPOSITORY:-ghcr.io/neondatabase}/neon:${TAG:-latest}
+    command:
+      - "storage_broker"
+      - "--listen-addr=0.0.0.0:50051"
+
+  pageserver:
+    image: ${REPOSITORY:-ghcr.io/neondatabase}/neon:${TAG:-latest}
+    environment:
+      - AWS_ACCESS_KEY_ID=minio
+      - AWS_SECRET_ACCESS_KEY=password
+    ports:
+      - 29898:9898
+    volumes:
+      - ./recovery_pageserver_config:/data/.neon/
+    depends_on:
+      - storage_broker
+      - minio_create_buckets
+
+  safekeeper1:
+    image: ${REPOSITORY:-ghcr.io/neondatabase}/neon:${TAG:-latest}
+    environment:
+      - SAFEKEEPER_ADVERTISE_URL=safekeeper1:5454
+      - SAFEKEEPER_ID=1
+      - BROKER_ENDPOINT=http://storage_broker:50051
+      - AWS_ACCESS_KEY_ID=minio
+      - AWS_SECRET_ACCESS_KEY=password
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - "safekeeper --listen-pg=$$SAFEKEEPER_ADVERTISE_URL --listen-http='0.0.0.0:7676' --id=$$SAFEKEEPER_ID --broker-endpoint=$$BROKER_ENDPOINT -D /data --remote-storage=\"{endpoint='http://minio:9000', bucket_name='neon', bucket_region='eu-north-1', prefix_in_bucket='/safekeeper/'}\""
+    volumes:
+      - recovery_1c067_sk1:/data
+    depends_on:
+      - storage_broker
+      - minio_create_buckets
+
+  safekeeper2:
+    image: ${REPOSITORY:-ghcr.io/neondatabase}/neon:${TAG:-latest}
+    environment:
+      - SAFEKEEPER_ADVERTISE_URL=safekeeper2:5454
+      - SAFEKEEPER_ID=2
+      - BROKER_ENDPOINT=http://storage_broker:50051
+      - AWS_ACCESS_KEY_ID=minio
+      - AWS_SECRET_ACCESS_KEY=password
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - "safekeeper --listen-pg=$$SAFEKEEPER_ADVERTISE_URL --listen-http='0.0.0.0:7676' --id=$$SAFEKEEPER_ID --broker-endpoint=$$BROKER_ENDPOINT -D /data --remote-storage=\"{endpoint='http://minio:9000', bucket_name='neon', bucket_region='eu-north-1', prefix_in_bucket='/safekeeper/'}\""
+    volumes:
+      - recovery_1c067_sk2:/data
+    depends_on:
+      - storage_broker
+      - minio_create_buckets
+
+  safekeeper3:
+    image: ${REPOSITORY:-ghcr.io/neondatabase}/neon:${TAG:-latest}
+    environment:
+      - SAFEKEEPER_ADVERTISE_URL=safekeeper3:5454
+      - SAFEKEEPER_ID=3
+      - BROKER_ENDPOINT=http://storage_broker:50051
+      - AWS_ACCESS_KEY_ID=minio
+      - AWS_SECRET_ACCESS_KEY=password
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - "safekeeper --listen-pg=$$SAFEKEEPER_ADVERTISE_URL --listen-http='0.0.0.0:7676' --id=$$SAFEKEEPER_ID --broker-endpoint=$$BROKER_ENDPOINT -D /data --remote-storage=\"{endpoint='http://minio:9000', bucket_name='neon', bucket_region='eu-north-1', prefix_in_bucket='/safekeeper/'}\""
+    volumes:
+      - recovery_1c067_sk3:/data
+    depends_on:
+      - storage_broker
+      - minio_create_buckets
+
+  compute1:
+    image: built-compute
+    environment:
+      - PG_VERSION=${PG_VERSION:-17}
+      - TENANT_ID=c38f0627b14702730471f03eda50502e
+      - TIMELINE_ID=1c06727f1d988ccbbd7945e96eaa1136
+    volumes:
+      - ./compute_wrapper/var/db/postgres/configs/:/var/db/postgres/configs/
+      - ./compute_wrapper/shell/:/shell/
+      - ./certs:/var/db/postgres/certs:ro
+    shm_size: 512m
+    ports:
+      - 25533:55433
+      - 23080:3080
+    entrypoint:
+      - "/shell/compute.sh"
+    networks:
+      default:
+        aliases:
+          - compute
+    depends_on:
+      - safekeeper1
+      - safekeeper2
+      - safekeeper3
+      - pageserver
+
+volumes:
+  recovery_1c067_minio:
+    external: true
+  recovery_1c067_sk1:
+    external: true
+  recovery_1c067_sk2:
+    external: true
+  recovery_1c067_sk3:
+    external: true

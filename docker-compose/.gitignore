@@ -1,0 +1,4 @@
+live_pre_restore_dumps/
+recovery_dumps/
+recovery_pageserver_config/tenants/
+certs/
