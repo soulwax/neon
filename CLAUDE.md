@@ -6,7 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Before changing or restarting the Docker Compose stack, read `docker-compose/DO_NOT_DO_THIS.md`.
 
-Do not force-recreate the full stateful Neon stack, prune Docker volumes, or run `docker compose down -v` unless the user explicitly confirms data can be destroyed. This stack may use anonymous Docker volumes for MinIO, pageserver, and safekeeper state; recreating containers can attach fresh volumes and make the database appear empty even when older data volumes still exist.
+Do not force-recreate the full stateful Neon stack, prune Docker volumes, or run `docker compose down -v` unless the user explicitly confirms data can be destroyed. As of 2026-05-13 the stateful services use **named Docker volumes** (`docker-compose_pageserver_data`, `*_safekeeper{1,2,3}_data`, `*_minio_data`), so the anonymous-volume swap risk is no longer active — but the historical anonymous volumes still exist on disk and should not be pruned without an explicit OK.
+
+## Internet Exposure and DNS
+
+The Neon stack is internet-facing via `madtec.org`:
+
+- `madtec.org:55433` → direct compute1 (TLS-required, `hostssl scram-sha-256`; plaintext from non-loopback rejected by a post-start `pg_hba` override in `compute_wrapper/shell/compute.sh`).
+- `127.0.0.1:55432` → pgbouncer (pooled, loopback only — not exposed).
+- `cloud_admin` SCRAM hash lives in `compute_wrapper/var/db/postgres/configs/config.json` (`encrypted_password`) and `pgbouncer/userlist.txt`. The plaintext password is held by the human only.
+
+DNS for `madtec.org` is managed by a dyndns script that pushes A/AAAA updates to Cloudflare as the home IP changes. The scripts and systemd units live at `/home/soulwax/workspace/other/dyndns` (its own repo with `CLAUDE.md` + `AGENTS.md` — read those before editing). Do not assume the resolved IPs are stable; if reachability breaks, check `systemctl status cloudflare-dyndns.timer` and `dig A/AAAA madtec.org` against `curl -4/-6 ifconfig.me`. Do not edit Cloudflare records for `madtec.org` manually — the script will overwrite them.
 
 ## What This Is
 

@@ -1,277 +1,262 @@
 {
-    "spec": {
-        "format_version": 1.0,
-        "timestamp": "2022-10-12T18:00:00.000Z",
-        "operation_uuid": "0f657b36-4b0f-4a2d-9c2e-1dcd615e7d8c",
-        "suspend_timeout_seconds": -1,
-        "cluster": {
-            "cluster_id": "docker_compose",
-            "name": "docker_compose_test",
-            "state": "restarted",
-            "roles": [
-                {
-                    "name": "cloud_admin",
-                    "encrypted_password": "e62f8690f27aede8830ad99e7d311445",
-                    "options": null
-                }
-            ],
-            "databases": [
-                {
-                    "name": "coindguild",
-                    "owner": "cloud_admin",
-                    "options": null
-                },
-                {
-                    "name": "starchild_frontend",
-                    "owner": "cloud_admin",
-                    "options": null
-                },
-                {
-                    "name": "starchild_backend",
-                    "owner": "cloud_admin",
-                    "options": null
-                },
-                {
-                    "name": "starchild_backend_shadow",
-                    "owner": "cloud_admin",
-                    "options": null
-                },
-                {
-                    "name": "coinguild",
-                    "owner": "cloud_admin",
-                    "options": null
-                },
-                {
-                    "name": "starchild_frontend,",
-                    "owner": "cloud_admin",
-                    "options": null
-                },
-                {
-                    "name": "coindguild,",
-                    "owner": "cloud_admin",
-                    "options": null
-                },
-                {
-                    "name": "starchild_backend,",
-                    "owner": "cloud_admin",
-                    "options": null
-                }
-            ],
-            "settings": [
-                {
-                    "name": "fsync",
-                    "value": "off",
-                    "vartype": "bool"
-                },
-                {
-                    "name": "wal_level",
-                    "value": "logical",
-                    "vartype": "enum"
-                },
-                {
-                    "name": "wal_log_hints",
-                    "value": "on",
-                    "vartype": "bool"
-                },
-                {
-                    "name": "log_connections",
-                    "value": "on",
-                    "vartype": "bool"
-                },
-                {
-                    "name": "port",
-                    "value": "55433",
-                    "vartype": "integer"
-                },
-                {
-                    "name": "shared_buffers",
-                    "value": "256MB",
-                    "vartype": "string"
-                },
-                {
-                    "name": "work_mem",
-                    "value": "8MB",
-                    "vartype": "string"
-                },
-                {
-                    "name": "maintenance_work_mem",
-                    "value": "64MB",
-                    "vartype": "string"
-                },
-                {
-                    "name": "effective_cache_size",
-                    "value": "1GB",
-                    "vartype": "string"
-                },
-                {
-                    "name": "max_connections",
-                    "value": "200",
-                    "vartype": "integer"
-                },
-                {
-                    "name": "listen_addresses",
-                    "value": "0.0.0.0",
-                    "vartype": "string"
-                },
-                {
-                    "name": "max_wal_senders",
-                    "value": "20",
-                    "vartype": "integer"
-                },
-                {
-                    "name": "max_replication_slots",
-                    "value": "20",
-                    "vartype": "integer"
-                },
-                {
-                    "name": "wal_sender_timeout",
-                    "value": "60s",
-                    "vartype": "string"
-                },
-                {
-                    "name": "wal_keep_size",
-                    "value": "0",
-                    "vartype": "integer"
-                },
-                {
-                    "name": "checkpoint_completion_target",
-                    "value": "0.9",
-                    "vartype": "real"
-                },
-                {
-                    "name": "random_page_cost",
-                    "value": "1.1",
-                    "vartype": "real"
-                },
-                {
-                    "name": "effective_io_concurrency",
-                    "value": "256",
-                    "vartype": "integer"
-                },
-                {
-                    "name": "max_worker_processes",
-                    "value": "8",
-                    "vartype": "integer"
-                },
-                {
-                    "name": "max_parallel_workers",
-                    "value": "8",
-                    "vartype": "integer"
-                },
-                {
-                    "name": "max_parallel_workers_per_gather",
-                    "value": "2",
-                    "vartype": "integer"
-                },
-                {
-                    "name": "idle_in_transaction_session_timeout",
-                    "value": "30s",
-                    "vartype": "string"
-                },
-                {
-                    "name": "tcp_keepalives_idle",
-                    "value": "60",
-                    "vartype": "integer"
-                },
-                {
-                    "name": "tcp_keepalives_interval",
-                    "value": "10",
-                    "vartype": "integer"
-                },
-                {
-                    "name": "tcp_keepalives_count",
-                    "value": "6",
-                    "vartype": "integer"
-                },
-                {
-                    "name": "password_encryption",
-                    "value": "md5",
-                    "vartype": "enum"
-                },
-                {
-                    "name": "restart_after_crash",
-                    "value": "off",
-                    "vartype": "bool"
-                },
-                {
-                    "name": "synchronous_standby_names",
-                    "value": "walproposer",
-                    "vartype": "string"
-                },
-                {
-                    "name": "shared_preload_libraries",
-                    "value": "neon,pg_cron,timescaledb,pg_stat_statements",
-                    "vartype": "string"
-                },
-                {
-                    "name": "neon.safekeepers",
-                    "value": "safekeeper1:5454,safekeeper2:5454,safekeeper3:5454",
-                    "vartype": "string"
-                },
-                {
-                    "name": "neon.timeline_id",
-                    "value": "TIMELINE_ID",
-                    "vartype": "string"
-                },
-                {
-                    "name": "neon.tenant_id",
-                    "value": "TENANT_ID",
-                    "vartype": "string"
-                },
-                {
-                    "name": "neon.pageserver_connstring",
-                    "value": "host=pageserver port=6400",
-                    "vartype": "string"
-                },
-                {
-                    "name": "max_replication_write_lag",
-                    "value": "500MB",
-                    "vartype": "string"
-                },
-                {
-                    "name": "max_replication_flush_lag",
-                    "value": "10GB",
-                    "vartype": "string"
-                },
-                {
-                    "name": "cron.database",
-                    "value": "postgres",
-                    "vartype": "string"
-                },
-                {
-                    "name": "ssl",
-                    "value": "on",
-                    "vartype": "bool"
-                },
-                {
-                    "name": "ssl_cert_file",
-                    "value": "/var/db/postgres/certs/server.crt",
-                    "vartype": "string"
-                },
-                {
-                    "name": "ssl_key_file",
-                    "value": "/var/db/postgres/certs/server.key",
-                    "vartype": "string"
-                }
-            ]
-        },
-        "delta_operations": []
-    },
-    "compute_ctl_config": {
-        "jwks": {
-            "keys": [
-                {
-                    "use": "sig",
-                    "key_ops": [
-                        "verify"
-                    ],
-                    "alg": "EdDSA",
-                    "kid": "ZGIxMzAzOGY0YWQwODk2ODU1MTk1NzMxMDFkYmUyOWU2NzZkOWNjNjMyMGRkZGJjOWY0MjdjYWVmNzE1MjUyOAo=",
-                    "kty": "OKP",
-                    "crv": "Ed25519",
-                    "x": "MGQ4ZDFhOTdmNTM0NmUwMDc3ZmJkN2Q0MWE0ZmI3M2NhNWE3YjFjOTNkM2IyYzRkZTQzOGM3MjBkZTk3N2E5ZAo="
-                }
-            ]
+  "spec": {
+    "format_version": 1.0,
+    "timestamp": "2022-10-12T18:00:00.000Z",
+    "operation_uuid": "0f657b36-4b0f-4a2d-9c2e-1dcd615e7d8c",
+    "suspend_timeout_seconds": -1,
+    "cluster": {
+      "cluster_id": "docker_compose",
+      "name": "docker_compose_test",
+      "state": "restarted",
+      "roles": [
+        {
+          "name": "cloud_admin",
+          "encrypted_password": "SCRAM-SHA-256$4096:UN20oJEEjxkpNioNx0n+5g==$Jmo/FWryafZoVTI0zp5FHdkFmKfVk98AXXHSkucIsIk=:Vs/JvZZPrzbDB0JM0CmX0xi9v4OAZ6CMsDdalYuR3g8=",
+          "options": null
         }
+      ],
+      "databases": [
+        {
+          "name": "coindguild",
+          "owner": "cloud_admin",
+          "options": null
+        },
+        {
+          "name": "starchild_frontend",
+          "owner": "cloud_admin",
+          "options": null
+        },
+        {
+          "name": "starchild_backend",
+          "owner": "cloud_admin",
+          "options": null
+        },
+        {
+          "name": "starchild_backend_shadow",
+          "owner": "cloud_admin",
+          "options": null
+        },
+        {
+          "name": "coinguild",
+          "owner": "cloud_admin",
+          "options": null
+        }
+      ],
+      "settings": [
+        {
+          "name": "fsync",
+          "value": "off",
+          "vartype": "bool"
+        },
+        {
+          "name": "wal_level",
+          "value": "logical",
+          "vartype": "enum"
+        },
+        {
+          "name": "wal_log_hints",
+          "value": "on",
+          "vartype": "bool"
+        },
+        {
+          "name": "log_connections",
+          "value": "on",
+          "vartype": "bool"
+        },
+        {
+          "name": "port",
+          "value": "55433",
+          "vartype": "integer"
+        },
+        {
+          "name": "shared_buffers",
+          "value": "256MB",
+          "vartype": "string"
+        },
+        {
+          "name": "work_mem",
+          "value": "8MB",
+          "vartype": "string"
+        },
+        {
+          "name": "maintenance_work_mem",
+          "value": "64MB",
+          "vartype": "string"
+        },
+        {
+          "name": "effective_cache_size",
+          "value": "1GB",
+          "vartype": "string"
+        },
+        {
+          "name": "max_connections",
+          "value": "200",
+          "vartype": "integer"
+        },
+        {
+          "name": "listen_addresses",
+          "value": "0.0.0.0",
+          "vartype": "string"
+        },
+        {
+          "name": "max_wal_senders",
+          "value": "20",
+          "vartype": "integer"
+        },
+        {
+          "name": "max_replication_slots",
+          "value": "20",
+          "vartype": "integer"
+        },
+        {
+          "name": "wal_sender_timeout",
+          "value": "60s",
+          "vartype": "string"
+        },
+        {
+          "name": "wal_keep_size",
+          "value": "0",
+          "vartype": "integer"
+        },
+        {
+          "name": "checkpoint_completion_target",
+          "value": "0.9",
+          "vartype": "real"
+        },
+        {
+          "name": "random_page_cost",
+          "value": "1.1",
+          "vartype": "real"
+        },
+        {
+          "name": "effective_io_concurrency",
+          "value": "256",
+          "vartype": "integer"
+        },
+        {
+          "name": "max_worker_processes",
+          "value": "8",
+          "vartype": "integer"
+        },
+        {
+          "name": "max_parallel_workers",
+          "value": "8",
+          "vartype": "integer"
+        },
+        {
+          "name": "max_parallel_workers_per_gather",
+          "value": "2",
+          "vartype": "integer"
+        },
+        {
+          "name": "idle_in_transaction_session_timeout",
+          "value": "30s",
+          "vartype": "string"
+        },
+        {
+          "name": "tcp_keepalives_idle",
+          "value": "60",
+          "vartype": "integer"
+        },
+        {
+          "name": "tcp_keepalives_interval",
+          "value": "10",
+          "vartype": "integer"
+        },
+        {
+          "name": "tcp_keepalives_count",
+          "value": "6",
+          "vartype": "integer"
+        },
+        {
+          "name": "password_encryption",
+          "value": "scram-sha-256",
+          "vartype": "enum"
+        },
+        {
+          "name": "restart_after_crash",
+          "value": "off",
+          "vartype": "bool"
+        },
+        {
+          "name": "synchronous_standby_names",
+          "value": "walproposer",
+          "vartype": "string"
+        },
+        {
+          "name": "shared_preload_libraries",
+          "value": "neon,pg_cron,timescaledb,pg_stat_statements",
+          "vartype": "string"
+        },
+        {
+          "name": "neon.safekeepers",
+          "value": "safekeeper1:5454,safekeeper2:5454,safekeeper3:5454",
+          "vartype": "string"
+        },
+        {
+          "name": "neon.timeline_id",
+          "value": "TIMELINE_ID",
+          "vartype": "string"
+        },
+        {
+          "name": "neon.tenant_id",
+          "value": "TENANT_ID",
+          "vartype": "string"
+        },
+        {
+          "name": "neon.pageserver_connstring",
+          "value": "host=pageserver port=6400",
+          "vartype": "string"
+        },
+        {
+          "name": "max_replication_write_lag",
+          "value": "500MB",
+          "vartype": "string"
+        },
+        {
+          "name": "max_replication_flush_lag",
+          "value": "10GB",
+          "vartype": "string"
+        },
+        {
+          "name": "cron.database",
+          "value": "postgres",
+          "vartype": "string"
+        },
+        {
+          "name": "ssl",
+          "value": "on",
+          "vartype": "bool"
+        },
+        {
+          "name": "ssl_cert_file",
+          "value": "/var/db/postgres/certs/server.crt",
+          "vartype": "string"
+        },
+        {
+          "name": "ssl_key_file",
+          "value": "/var/db/postgres/certs/server.key",
+          "vartype": "string"
+        }
+      ]
+    },
+    "delta_operations": []
+  },
+  "compute_ctl_config": {
+    "jwks": {
+      "keys": [
+        {
+          "use": "sig",
+          "key_ops": [
+            "verify"
+          ],
+          "alg": "EdDSA",
+          "kid": "ZGIxMzAzOGY0YWQwODk2ODU1MTk1NzMxMDFkYmUyOWU2NzZkOWNjNjMyMGRkZGJjOWY0MjdjYWVmNzE1MjUyOAo=",
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "MGQ4ZDFhOTdmNTM0NmUwMDc3ZmJkN2Q0MWE0ZmI3M2NhNWE3YjFjOTNkM2IyYzRkZTQzOGM3MjBkZTk3N2E5ZAo="
+        }
+      ]
     }
+  }
 }

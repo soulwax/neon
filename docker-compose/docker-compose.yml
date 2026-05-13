@@ -1,3 +1,10 @@
+volumes:
+  minio_data:
+  pageserver_data:
+  safekeeper1_data:
+  safekeeper2_data:
+  safekeeper3_data:
+
 services:
   minio:
     restart: always
@@ -8,6 +15,8 @@ services:
     environment:
       - MINIO_ROOT_USER=minio
       - MINIO_ROOT_PASSWORD=password
+    volumes:
+      - minio_data:/data
     command: server /data --address :9000 --console-address ":9001"
 
   minio_create_buckets:
@@ -39,6 +48,7 @@ services:
        - 9898:9898 # http endpoints
     volumes:
       - ./pageserver_config:/data/.neon/
+      - pageserver_data:/data
     ulimits:
       nofile:
         soft: 65536
@@ -60,6 +70,8 @@ services:
     ports:
       #- 5454:5454 # pg protocol handler
       - 7676:7676 # http endpoints
+    volumes:
+      - safekeeper1_data:/data
     ulimits:
       nofile:
         soft: 65536
@@ -94,6 +106,8 @@ services:
     ports:
       #- 5454:5454 # pg protocol handler
       - 7677:7676 # http endpoints
+    volumes:
+      - safekeeper2_data:/data
     ulimits:
       nofile:
         soft: 65536
@@ -128,6 +142,8 @@ services:
     ports:
       #- 5454:5454 # pg protocol handler
       - 7678:7676 # http endpoints
+    volumes:
+      - safekeeper3_data:/data
     ulimits:
       nofile:
         soft: 65536
@@ -166,7 +182,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
-      - 55432:5432   # pooled — use this for DATABASE_URL / app runtime via neon.ixa.ink
+      - 127.0.0.1:55432:5432   # pooled, localhost-only; direct/unpooled is exposed on madtec.org:55433
     volumes:
       - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
       - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
@@ -194,6 +210,7 @@ services:
       - PG_VERSION=${PG_VERSION:-16}
       - TENANT_ID=${TENANT_ID:-}
       - TIMELINE_ID=${TIMELINE_ID:-}
+      - OTEL_SDK_DISABLED=true
       #- RUST_BACKTRACE=1
     # Mount the test files directly, for faster editing cycle.
     volumes:
