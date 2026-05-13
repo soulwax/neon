@@ -35,26 +35,25 @@ Tracking follow-ups from the madtec.org exposure session (2026-05-13).
 
 ## P2 — Cleanup
 
-- [ ] **Remove orphaned anonymous Docker volumes** from prior recreations.
-  - After the named-volume migration, these are no longer referenced by the live stack:
-    - `755953e0990b32961a8e5d51f4fd7a72794aa853d6ac063be4e2e10b48facb1d` (old pageserver)
-    - `3a2054a70cded3ceb9d84b10da9b5ccf41e0685462454c78ab6c27bfea39187e` (old safekeeper1)
-    - `9a1f49f9fd5ba4fe940e2867b07a1f0d0386e9b2f9e95c5703250ae379d00977` (old safekeeper2)
-    - `73833e4d56ce3237599ea4d4dfd106efd047ff6218f1032fbe52b4bf54b70f4b` (old safekeeper3)
-    - `19c5ffb6e4781baeb280036c569e2d38da59697ff0fa34e38029c332097d756f` (old minio)
-    - plus ~9 other anonymous volumes from earlier recreations (`docker volume ls` lists 14 total).
-  - Check `docker-compose.recovery-*.yml` files don't reference any before removing.
-  - **Never** `docker volume prune`.
+- [x] **Removed 14 orphaned anonymous Docker volumes** *(2026-05-13)*. ~6.5 GB reclaimed. Remaining anonymous volumes (`cf2e4c2…`, `1d2bd1b…`) are attached to stateless services (storage_broker, compute_is_ready) and intentionally left.
 
-- [ ] **Tidy UFW rules** — drop the now-dead `55432/tcp ALLOW Anywhere` entries (pgbouncer is loopback only). Requires sudo.
+- [ ] **Tidy UFW rules** — drop the now-dead `55432/tcp ALLOW Anywhere` entries (pgbouncer is loopback only). Requires sudo. Commands:
+  - `sudo ufw status numbered | grep 55432`
+  - `sudo ufw delete <N>` (higher numbers first) — or `sudo ufw delete allow 55432/tcp` + `sudo ufw delete allow 55432`
+  - Optional: also `sudo ufw delete allow 5432/tcp` (5432 no longer bound).
 
-- [ ] **Delete rollback backups** once you're confident (~24h):
-  - `docker-compose/pageserver_config.bak.2026-05-13/`
-  - `docker-compose/pgbouncer/userlist.txt.bak.2026-05-13`
-  - `docker-compose/compute_wrapper/var/db/postgres/configs/config.json.bak.2026-05-13`
+- [x] **Deleted rollback backups** *(2026-05-13)*. Old md5-era config, userlist, and pageserver bind-mount snapshots were removed once auth + named-volume changes verified.
 
 ## P3 — Reachability polish
 
-- [ ] **Add A record `madtec.org → 79.199.223.227`** (currently AAAA only). Without it, IPv4-only clients can't resolve.
-- [ ] **Confirm router NAT forwards `55433 → 192.168.2.116`** (needed for IPv4 reach).
-- [ ] **Commit `docker-compose.yml`** — currently modified, not staged.
+- [x] **Add A record `madtec.org`** — confirmed present, points at `79.199.223.227` (managed by Cloudflare dyndns at `/home/soulwax/workspace/other/dyndns`).
+- [x] **Confirm router NAT forwards `55433`** — IPv4 reachability verified end-to-end (TCP connect succeeded from outside DNS resolution).
+- [x] **Commit hardening changes** — landed as `c2cbe6b53` on `main`. NOT pushed yet (awaiting explicit OK).
+- [x] **Stale AAAA root-caused** *(2026-05-13)*. The dyndns script's configured `IFACE="wlxec750c68b7ce"` no longer exists (USB wifi adapter is gone); `detect_ipv6()` returned empty, so the updater wrote IPv4 only and AAAA was never refreshed. Source files in `/home/soulwax/workspace/other/dyndns/` updated to `IFACE="eno1"` (the active wired interface with the global IPv6). User still needs to:
+  - Deploy the change to the systemd-installed copy: `sudo sed -i 's|^IFACE=.*|IFACE="eno1"|' /usr/local/bin/.env`
+  - Trigger an immediate run: `sudo systemctl start cloudflare-dyndns.service && sudo tail -5 /var/log/cloudflare-dyndns.log`
+  - Verify: `dig +short AAAA madtec.org` should return `2003:c6:b72a:a333:cfe1:122a:3a0:ae86` (the stable mngtmpaddr address).
+
+## P0 — Security follow-up
+
+- [ ] **Rotate Cloudflare API token**. The token in `/home/soulwax/workspace/other/dyndns/cloudflare-dyndns.conf` was inadvertently echoed to a Claude Code session on 2026-05-13. Rotate via the Cloudflare dashboard, update `.env` + `/usr/local/bin/.env` with the new token, then `sudo systemctl restart cloudflare-dyndns.service`.
