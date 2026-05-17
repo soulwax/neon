@@ -57,3 +57,10 @@ Tracking follow-ups from the madtec.org exposure session (2026-05-13).
 ## P0 — Security follow-up
 
 - [ ] **Rotate Cloudflare API token**. The token in `/home/soulwax/workspace/other/dyndns/cloudflare-dyndns.conf` was inadvertently echoed to a Claude Code session on 2026-05-13. Rotate via the Cloudflare dashboard, update `.env` + `/usr/local/bin/.env` with the new token, then `sudo systemctl restart cloudflare-dyndns.service`.
+- [ ] **Rotate cloudflared tunnel token**. The tunnel token (`fb058626-d93a-4193-931b-ede588887f2f`) was visible in `pgrep -af cloudflared` output on 2026-05-14 — it leaked into a Claude Code session. Rotate via Cloudflare Zero Trust → Networks → Tunnels → select the tunnel → refresh token, then `sudo systemctl restart cloudflared.service`.
+
+## Reachability
+
+- [x] **`neon.madtec.org` subdomain configured** *(2026-05-14)*. Was previously CNAMEd to an Argo Tunnel (`fb058626-...cfargotunnel.com`, proxied=true). Repointed to `madtec.org` (proxied=false, ttl=60), so it inherits the dyndns-managed A/AAAA. Verified at authoritative nameserver and via TCP connect to `:5432`, `:55432`, `:55433`. Public resolver caches catch up within 60s.
+- [x] **Pgbouncer exposed on `:5432` and `:55432`** *(2026-05-14)*. Both bound to `0.0.0.0`; TLS+SCRAM enforced. `docker-compose.yml` updated.
+- [ ] **Decide what to do with the existing cloudflared tunnel** (`fb058626-...`). The systemd unit is still running but `neon.madtec.org` no longer routes through it. If you still need it for HTTPS-only services, fine; otherwise consider `sudo systemctl disable --now cloudflared.service`.

@@ -182,7 +182,8 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
-      - 127.0.0.1:55432:5432   # pooled, localhost-only; direct/unpooled is exposed on madtec.org:55433
+      - 5432:5432              # standard PG port, pooled via pgbouncer (TLS+scram enforced)
+      - 55432:5432             # alt pooled port (kept for compatibility)
     volumes:
       - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
       - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
