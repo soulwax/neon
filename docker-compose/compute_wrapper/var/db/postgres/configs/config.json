@@ -11,7 +11,7 @@
       "roles": [
         {
           "name": "cloud_admin",
-          "encrypted_password": "SCRAM-SHA-256$4096:UN20oJEEjxkpNioNx0n+5g==$Jmo/FWryafZoVTI0zp5FHdkFmKfVk98AXXHSkucIsIk=:Vs/JvZZPrzbDB0JM0CmX0xi9v4OAZ6CMsDdalYuR3g8=",
+          "encrypted_password": "SCRAM-SHA-256$4096:9seYyLBQNyah71d8aH1jvg==$eJVG+UnTj8bmK6xbBuwFEZVvyzA4IJFj68Nth9tGids=:eOBOMcA3z8/ueOjbvotehJi6fEBK3z5ZhkZTI3kL8SE=",
           "options": null
         }
       ],

@@ -22,7 +22,7 @@ Tracking follow-ups from the madtec.org exposure session (2026-05-13).
   - `pg_hba.conf` rewritten via post-start hook in `compute.sh`: loopback `trust`, everything else `hostssl scram-sha-256`, plaintext rejected.
   - Verified externally: plaintext rejected, wrong-password rejected, TLSv1.3 + scram accepted, pgbouncer pooled path still works.
   - Backups for rollback: `pgbouncer/userlist.txt.bak.2026-05-13`, `compute_wrapper/var/db/postgres/configs/config.json.bak.2026-05-13` (contain OLD md5 hash + comma DBs — delete once you're confident).
-  - Password is held by you (the human) only — not on disk, not in shell history, not in argv (pre-hashed SCRAM was used for ALTER ROLE).
+  - Password **re-rotated 2026-05-20** (the previous one was lost). New 40-char alphanumeric password + full connection strings stored in `docker-compose/.secrets/cloud_admin.txt` (gitignored via `.secrets/`, mode 600). The SCRAM verifier is in lockstep across `config.json`, `pgbouncer/userlist.txt`, and live `pg_authid`; pre-hashed SCRAM was used for `ALTER ROLE` so the plaintext never hit argv or shell history. Verified: direct :55433, pooled :55432 and :5432 all authenticate; wrong password rejected.
 
 ## P1 — Insurance
 
