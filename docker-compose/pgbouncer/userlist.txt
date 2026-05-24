@@ -1,1 +1,2 @@
 "cloud_admin" "SCRAM-SHA-256$4096:9seYyLBQNyah71d8aH1jvg==$eJVG+UnTj8bmK6xbBuwFEZVvyzA4IJFj68Nth9tGids=:eOBOMcA3z8/ueOjbvotehJi6fEBK3z5ZhkZTI3kL8SE="
+"starchild" "SCRAM-SHA-256$4096:+8TY5fxx9k58vzm/D/J3bg==$f+DTf0jb97nxRJYWKZbAgdLnQeIxouQLlsW/fCI3YL0=:8z3ErAGQnu4YhRZHbTwkRj6E67UO2Sv+ZSZshmFyHL8="
