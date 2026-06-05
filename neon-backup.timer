@@ -1,0 +1,11 @@
+[Unit]
+Description=Neon database nightly logical backup (02:00 daily)
+Requires=neon-backup.service
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+RandomizedDelaySec=300
+Persistent=true
+
+[Install]
+WantedBy=timers.target

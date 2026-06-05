@@ -1,0 +1,21 @@
+[Unit]
+Description=Neon Database Docker Compose Stack
+Documentation=https://github.com/neondatabase/neon
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=soulwax
+Group=soulwax
+WorkingDirectory=/home/soulwax/neon/docker-compose
+ExecStart=/usr/bin/docker compose up -d --remove-orphans
+ExecStop=/usr/bin/docker compose stop
+ExecReload=/usr/bin/docker compose pull
+Restart=on-failure
+TimeoutStartSec=120
+
+[Install]
+WantedBy=multi-user.target

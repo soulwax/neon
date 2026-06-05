@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker volume ls*)",
+      "Bash(docker volume inspect*)",
+      "Bash(docker compose ps*)",
+      "Bash(systemctl status *)",
+      "Bash(systemctl is-enabled *)",
+      "Bash(systemctl is-active *)",
+      "Bash(curl -s http://localhost:*)"
+    ]
+  }
+}

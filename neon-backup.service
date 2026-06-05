@@ -1,0 +1,11 @@
+[Unit]
+Description=Neon database nightly logical backup
+After=docker.service network-online.target
+
+[Service]
+Type=oneshot
+User=soulwax
+Group=soulwax
+ExecStart=/home/soulwax/neon/backups/neon-backup.sh
+StandardOutput=journal
+StandardError=journal
