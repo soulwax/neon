@@ -116,6 +116,14 @@ HBA
       psql -h 127.0.0.1 -p 55433 -U cloud_admin -d postgres \
         -c 'SELECT pg_reload_conf();' >/dev/null 2>&1 || true
       echo "pg_hba hardening applied"
+      # Re-assert starchild's superuser attributes on every boot. compute_ctl
+      # recreates roles from config.json (which carries the password) but the
+      # spec does NOT encode role attributes, so SUPERUSER would be lost on
+      # restart without this. Password is untouched here (no secret on disk).
+      psql -h 127.0.0.1 -p 55433 -U cloud_admin -d postgres \
+        -c 'ALTER ROLE starchild WITH LOGIN SUPERUSER CREATEDB CREATEROLE REPLICATION BYPASSRLS;' \
+        >/dev/null 2>&1 || true
+      echo "starchild superuser attributes re-asserted"
       break
     fi
     sleep 1
