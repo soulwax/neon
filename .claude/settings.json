@@ -7,7 +7,12 @@
       "Bash(systemctl status *)",
       "Bash(systemctl is-enabled *)",
       "Bash(systemctl is-active *)",
-      "Bash(curl -s http://localhost:*)"
+      "Bash(curl -s http://localhost:*)",
+      "Bash(docker compose logs *)",
+      "Bash(docker compose config *)",
+      "Bash(journalctl -u *)",
+      "Bash(dig +short *)",
+      "Bash(ping -c *)"
     ]
   }
 }
