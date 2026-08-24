@@ -54,8 +54,13 @@ services:
         soft: 65536
         hard: 65536
     depends_on:
-      - storage_broker
-      - minio_create_buckets
+      storage_broker:
+        condition: service_started
+      # Gate on the bucket-init container COMPLETING (it self-waits for minio to
+      # accept connections), so the pageserver/safekeeper never starts before
+      # minio is serving. Prevents the "found 0 timelines" startup race.
+      minio_create_buckets:
+        condition: service_completed_successfully
 
   safekeeper1:
     restart: always
@@ -90,8 +95,13 @@ services:
                                         bucket_region='eu-north-1',
                                         prefix_in_bucket='/safekeeper/'}\""
     depends_on:
-      - storage_broker
-      - minio_create_buckets
+      storage_broker:
+        condition: service_started
+      # Gate on the bucket-init container COMPLETING (it self-waits for minio to
+      # accept connections), so the pageserver/safekeeper never starts before
+      # minio is serving. Prevents the "found 0 timelines" startup race.
+      minio_create_buckets:
+        condition: service_completed_successfully
 
   safekeeper2:
     restart: always
@@ -126,8 +136,13 @@ services:
                                         bucket_region='eu-north-1',
                                         prefix_in_bucket='/safekeeper/'}\""
     depends_on:
-      - storage_broker
-      - minio_create_buckets
+      storage_broker:
+        condition: service_started
+      # Gate on the bucket-init container COMPLETING (it self-waits for minio to
+      # accept connections), so the pageserver/safekeeper never starts before
+      # minio is serving. Prevents the "found 0 timelines" startup race.
+      minio_create_buckets:
+        condition: service_completed_successfully
 
   safekeeper3:
     restart: always
@@ -162,8 +177,13 @@ services:
                                         bucket_region='eu-north-1',
                                         prefix_in_bucket='/safekeeper/'}\""
     depends_on:
-      - storage_broker
-      - minio_create_buckets
+      storage_broker:
+        condition: service_started
+      # Gate on the bucket-init container COMPLETING (it self-waits for minio to
+      # accept connections), so the pageserver/safekeeper never starts before
+      # minio is serving. Prevents the "found 0 timelines" startup race.
+      minio_create_buckets:
+        condition: service_completed_successfully
 
   storage_broker:
     restart: always
