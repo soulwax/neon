@@ -20,19 +20,24 @@ services:
     command: server /data --address :9000 --console-address ":9001"
 
   minio_create_buckets:
-    image: minio/mc
+    image: amazon/aws-cli:latest
     environment:
-      - MINIO_ROOT_USER=minio
-      - MINIO_ROOT_PASSWORD=password
+      - AWS_ACCESS_KEY_ID=minio
+      - AWS_SECRET_ACCESS_KEY=password
+      - AWS_DEFAULT_REGION=eu-north-1
     entrypoint:
       - "/bin/sh"
       - "-c"
     command:
-      - "until (/usr/bin/mc alias set minio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD) do
-             echo 'Waiting to start minio...' && sleep 1;
-         done;
-         /usr/bin/mc mb minio/neon --region=eu-north-1;
-         exit 0;"
+      - |
+        until aws --endpoint-url http://minio:9000 s3api list-buckets >/dev/null 2>&1; do
+          echo 'Waiting to start minio...' && sleep 1
+        done
+        if aws --endpoint-url http://minio:9000 s3api head-bucket --bucket neon >/dev/null 2>&1; then
+          echo 'Bucket neon already exists'
+        else
+          aws --endpoint-url http://minio:9000 s3api create-bucket --bucket neon --create-bucket-configuration LocationConstraint=eu-north-1
+        fi
     depends_on:
       - minio
 
@@ -202,8 +207,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
-      - 5432:5432              # standard PG port, pooled via pgbouncer (TLS+scram enforced)
-      - 55432:5432             # alt pooled port (kept for compatibility)
+      - 127.0.0.1:55432:5432  # pooled endpoint is loopback only
     volumes:
       - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
       - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
